@@ -2,7 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
-
  //класс-контейнер, хранящий ссылки на объекты интерфейса (UI), связанные с диалогами.
 namespace DIALOGUE
 {

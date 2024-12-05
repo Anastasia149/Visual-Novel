@@ -234,7 +234,7 @@ public class TextArchitect
     {
         while (tmpro.maxVisibleCharacters<tmpro.textInfo.characterCount)
         {
-            tmpro.maxVisibleCharacters+= hurryUp ? charactersPerCycle * 5 : charactersPerCycle;
+            tmpro.maxVisibleCharacters+= hurryUp ? charactersPerCycle * 4 : charactersPerCycle;
             yield return new WaitForSeconds(0.015f / speed);
         }
     }
@@ -253,7 +253,7 @@ public class TextArchitect
 
         while (true)
         {
-            float fadeSpeed = ((hurryUp ? charactersPerCycle * 5 : charactersPerCycle)*speed)*4f;
+            float fadeSpeed = ((hurryUp ? charactersPerCycle * 4 : charactersPerCycle)*speed)*4f;
 
             for (int i = minRange; i < maxRange; i++)
             {

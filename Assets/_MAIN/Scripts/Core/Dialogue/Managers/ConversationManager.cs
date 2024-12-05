@@ -17,11 +17,18 @@ public class ConversationManager
 
     // Архитектор текста, который отвечает за постепенное отображение текста (например, эффект "печати").
     private TextArchitect architect = null;
+    private bool userPrompt = false;
 
     // Конструктор класса принимает `TextArchitect` и сохраняет ссылку на него.
     public ConversationManager(TextArchitect architect)
     {
         this.architect = architect;
+        dialogueSystem.onUserPrompt_Next += OnUserPrompt_Next;
+    }
+
+    private void OnUserPrompt_Next()
+    {
+        userPrompt = true;
     }
 
     // Метод для запуска нового диалога.
@@ -58,27 +65,21 @@ public class ConversationManager
         {
             // Если строка пустая или содержит только пробелы, пропускаем её.
             if (string.IsNullOrWhiteSpace(conversation[i]))
-            {
                 continue;
-            }
-
+            
             // Парсим строку в объект `DIALOGUE_LINE`, чтобы разделить текст и команды.
             DIALOGUE_LINE line = DialogueParser.Parse(conversation[i]);
 
             // Если строка содержит диалог, запускаем выполнение диалога.
             if (line.hasDialogue)
-            {
                 yield return Line_RunDialogue(line);
-            }
 
             // Если строка содержит команды, выполняем их.
             if (line.hasCommands)
-            {
                 yield return Line_RunCommands(line);
-            }
-
-            // Пауза в 1 секунду между строками (можно заменить или убрать, если нужно ускорить диалог).
-            yield return new WaitForSeconds(1);
+            
+            if(line.hasDialogue)
+                yield return WaitForUserInput();
         }
     }
 
@@ -88,7 +89,7 @@ public class ConversationManager
         // Если указано имя говорящего, отображаем его.
         if (line.hasSpeaker)
         {
-            dialogueSystem.ShowSpeakerName(line.speaker);
+            dialogueSystem.ShowSpeakerName(line.speakerData);
         }
         // Если имени нет, скрываем панель имени.
         else
@@ -96,24 +97,54 @@ public class ConversationManager
             dialogueSystem.HideSpeakerName();
         }
 
-        // Передаём текст строки диалога в `TextArchitect` для "печати" текста.
-        architect.Build(line.dialogue);
-
         // Ждём завершения "печати" текста, пока `TextArchitect` работает.
-        while (architect.isBuilding)
-        {
-            yield return null; // Ожидание завершения на каждом кадре.
-        }
+        yield return BuildDialogue(line.dialogueData); // Ожидание завершения на каждом кадре.
     }
 
     // Корутин для выполнения команд, указанных в строке диалога.
     IEnumerator Line_RunCommands(DIALOGUE_LINE line)
     {
-        // Выводим команды в консоль (здесь их выполнение не реализовано, только логирование).
-        Debug.Log(line.commands);
+        List<DL_COMMAND_DATA.Command> commands = line.commandData.commands;
 
+        foreach(DL_COMMAND_DATA.Command command in commands)
+        {
+            CommandManager.instance.Execute(command.name, command.arguments);
+        }
         // Корутин завершает выполнение.
         yield return null;
+    }
+
+    IEnumerator BuildDialogue(string dialogue)
+    {
+        architect.Build(dialogue);
+
+        // Ждём завершения "печати" текста, пока `TextArchitect` работает.
+        while (architect.isBuilding)
+        {
+            if (userPrompt)
+            {
+                if (!architect.hurryUp)
+                {
+                    architect.hurryUp = true;
+                }
+                else
+                {
+                    architect.ForseComplit();
+                }
+                userPrompt=false;
+            }
+            yield return null; // Ожидание завершения на каждом кадре.
+        }
+    }
+
+    IEnumerator WaitForUserInput()
+    {
+        while (!userPrompt)
+        {
+            yield return null;
+        }
+
+        userPrompt = false;
     }
 }
 

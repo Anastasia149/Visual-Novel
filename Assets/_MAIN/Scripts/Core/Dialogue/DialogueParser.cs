@@ -8,9 +8,8 @@ using UnityEngine.Experimental.AI;
 
 public class DialogueParser
 {
-    private const string connectionString = "Data Source=path_to_your_database.db;Version=3;";
     // Регулярное выражение для поиска команд в строке.
-    private const string commandRegexPattern = "\\w*[^\\s]\\(";
+    private const string commandRegexPattern = @"\w*[^\s]\(";
 
     // Метод для разбора строки диалога и возвращения объекта `DIALOGUE_LINE`.
     public static DIALOGUE_LINE Parse(string rawLine)
