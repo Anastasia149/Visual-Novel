@@ -9,7 +9,7 @@ using UnityEngine.Experimental.AI;
 public class DialogueParser
 {
     // Регулярное выражение для поиска команд в строке.
-    private const string commandRegexPattern = @"\w*[^\s]\(";
+    private const string commandRegexPattern = @"[\w\[\]]*[^\s]\(";
 
     // Метод для разбора строки диалога и возвращения объекта `DIALOGUE_LINE`.
     public static DIALOGUE_LINE Parse(string rawLine)
@@ -69,19 +69,20 @@ public class DialogueParser
 
         // Ищем команды с помощью регулярного выражения.
         Regex commandRegex = new Regex(commandRegexPattern);
-        Match match = commandRegex.Match(rawLine);
+        MatchCollection matches = commandRegex.Matches(rawLine);
         int commandStart = -1;
-
-        // Если команды найдены, запоминаем их начало.
-        if (match.Success)
+        foreach (Match match in matches)
         {
-            commandStart = match.Index;
-
-            // Если в строке нет текста диалога, возвращаем строку как команду.
-            if (dialogueStart == -1 && dialogueEnd == -1)
+            if(match.Index<dialogueStart || match.Index>dialogueEnd)
             {
-                return ("", "", rawLine.Trim());
+                commandStart=match.Index;
+                break;
             }
+        }
+
+        if (commandStart!=-1 && (dialogueStart == -1 && dialogueEnd == -1))
+        {
+            return("","", rawLine.Trim());
         }
 
         // Разбираем строку, если найден текст диалога.
@@ -108,7 +109,7 @@ public class DialogueParser
         // Если строка содержит только имя спикера.
         else
         {
-            speaker = rawLine;
+            dialogue = rawLine;
         }
 
         // Возвращаем разобранные компоненты строки.

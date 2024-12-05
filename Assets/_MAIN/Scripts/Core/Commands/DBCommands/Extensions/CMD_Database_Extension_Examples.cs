@@ -2,6 +2,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using TESTING;
+using COMMANDS;
 
 public class CMD_Database_Extension_Examples : CMD_DatabaseExtension
 {

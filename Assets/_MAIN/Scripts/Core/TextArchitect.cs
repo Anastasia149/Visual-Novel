@@ -3,101 +3,124 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using System;
-using Unity.VisualScripting;
 
 public class TextArchitect
 {
-    //используемый для текста в интерфейсе Unity
-   private TextMeshProUGUI tmpro_ui;
-   //используемый для текста в мировом пространстве (не в UI).
-   private TextMeshPro tmpro_world;
-   //роверяет, присвоен ли tmpro_ui; если это так, используется tmpro_ui, иначе — tmpro_world.
-   public TMP_Text tmpro => tmpro_ui != null ? tmpro_ui:tmpro_world;
-   //Это свойство возвращает текущий текст
-   public string currentText => tmpro.text;
-   //Это строка, которая будет в конечном итоге отображена.
-   public string targetText {get; private set;} = "";
-   //Эта переменная хранит любой существующий текст, который может быть до нового текста
-   public string preText {get; private set;} = "";
-   private int preTextLength = 0;
-   //Это свойство конкатенирует preText и targetText, чтобы вернуть полную строку, которая будет построена.
-   public string fullTargetText => preText+targetText;
-   public enum BuildMethod
-   {
-        instant, //Моментальное отображение текста.
-        typewriter, //Отображение текста по одному символу за раз, как на печатной машинке.
-        fade //Отображение текста с эффектом затухания.
-   }
-   public BuildMethod buildMethod = BuildMethod.typewriter; //Это поле определяет, какой метод отображения текста будет использоваться
-   public Color textColor {get{return tmpro.color;} set{tmpro.color = value;}} //Это свойство позволяет получить и установить цвет текста в компоненте TMP.
-   public float speed{get{return baseSpeed*speedMultiplier;}set {speedMultiplier=value;}} //Это скорость эффекта печатной машинки.
-   private const float baseSpeed = 1; //speed она основана на значении baseSpeed
-   private float speedMultiplier=1; //speed может быть умножена на speedMultiplier
+    // Компонент TextMeshPro для UI
+    private TextMeshProUGUI tmpro_ui;
+    // Компонент TextMeshPro для отображения текста в мировом пространстве
+    private TextMeshPro tmpro_world;
+    
+    // Это свойство проверяет, присвоен ли tmpro_ui; если это так, используется tmpro_ui, иначе — tmpro_world
+    public TMP_Text tmpro => tmpro_ui != null ? tmpro_ui : tmpro_world;
+    
+    // Это свойство возвращает текущий текст, отображаемый в tmpro
+    public string currentText => tmpro.text;
+    
+    // Текст, который будет отображаться в конце
+    public string targetText { get; private set; } = "";
+    
+    // Существующий текст, который может быть до добавления нового текста
+    public string preText { get; private set; } = "";
+    
+    private int preTextLength = 0;
 
-    //Это свойство вычисляет, сколько символов должно быть обработано за один цикл в зависимости от скорости.
-    public int charactersPerCycle {get {return speed<=2f?characterMultiplier:speed<=2.5f?characterMultiplier*2:characterMultiplier*3;}}
-    private int characterMultiplier =1;
+    // Полный текст (preText + targetText), который будет построен
+    public string fullTargetText => preText + targetText;
 
-    //Это флаг, который может быть использован для ускорения или пропуска отображения текста
+    // Перечисление для различных методов построения текста
+    public enum BuildMethod
+    {
+        instant, // Мгновенное отображение текста
+        typewriter, // Эффект печатной машинки (по одному символу)
+        fade // Эффект затухания текста
+    }
+
+    // Метод отображения текста (по умолчанию типографический эффект)
+    public BuildMethod buildMethod = BuildMethod.typewriter;
+
+    // Цвет текста
+    public Color textColor { get { return tmpro.color; } set { tmpro.color = value; } }
+
+    // Скорость печатной машинки, контролируемая переменной speedMultiplier
+    public float speed { get { return baseSpeed * speedMultiplier; } set { speedMultiplier = value; } }
+
+    private const float baseSpeed = 1; // Базовая скорость печатной машинки
+    private float speedMultiplier = 1; // Множитель для скорости печатной машинки
+
+    // Определяет, сколько символов нужно обрабатывать за один цикл в зависимости от скорости
+    public int charactersPerCycle { get { return speed <= 2f ? characterMultiplier : speed <= 2.5f ? characterMultiplier * 2 : characterMultiplier * 3; } }
+    
+    private int characterMultiplier = 1; // Множитель для символов
+
+    // Флаг для ускорения или пропуска отображения текста
     public bool hurryUp = false;
 
-    public TextArchitect (TextMeshProUGUI tmpro_ui)
+    // Конструктор для инициализации с компонентом TextMeshProUGUI
+    public TextArchitect(TextMeshProUGUI tmpro_ui)
     {
-        this.tmpro_ui=tmpro_ui;
+        this.tmpro_ui = tmpro_ui;
     }
 
-    public TextArchitect (TextMeshPro tmpro_world)
+    // Конструктор для инициализации с компонентом TextMeshPro
+    public TextArchitect(TextMeshPro tmpro_world)
     {
-        this.tmpro_world=tmpro_world;
+        this.tmpro_world = tmpro_world;
     }
 
-    //метод устанавливает targetText для отображения и запускает процесс построения текста.
+    // Этот метод устанавливает targetText для отображения и запускает процесс построения текста
     public Coroutine Build(string text)
     {
-        preText="";
-        targetText=text;
+        preText = ""; // Сбросить предшествующий текст
+        targetText = text;
 
-        Stop();
-        //Запускает новый корутин (BuildProcess), который будет управлять процессом построения текста.
+        Stop(); // Остановить предыдущий процесс отображения текста
+
+        // Запускает корутину для построения текста
         buildProcess = tmpro.StartCoroutine(Building());
         return buildProcess;
     }
 
-    //тот метод добавляет новый текст к текущему.
+    // Этот метод добавляет новый текст к текущему
     public Coroutine Append(string text)
     {
-        preText=tmpro.text;
-        targetText=text;
+        preText = tmpro.text; // Сохранить текущий текст как preText
+        targetText = text;
 
-        Stop();
+        Stop(); // Остановить предыдущий процесс отображения текста
 
+        // Запускает корутину для построения текста
         buildProcess = tmpro.StartCoroutine(Building());
         return buildProcess;
     }
 
-    //используется для остановки корутины, если это необходимо.
+    // Переменная для хранения корутины, управляющей процессом построения текста
     private Coroutine buildProcess = null;
-    //Это свойство возвращает булево значение, указывающее, выполняется ли в данный момент процесс построения текста.
-    public bool isBuilding=>buildProcess !=null;
 
-    //Этот метод останавливает любой текущий работающий корутин, который строит текст.
+    // Свойство, которое возвращает булево значение, указывающее, выполняется ли процесс построения текста
+    public bool isBuilding => buildProcess != null;
+
+    // Этот метод останавливает текущий процесс отображения текста
     public void Stop()
     {
-        //корутин работает
-        if(!isBuilding)
+        // Если нет активной корутины, выходим
+        if (!isBuilding)
         {
             return;
         }
-        //останавливает корутин и присваивает buildProcess значение null.
+        
+        // Останавливаем корутину
         tmpro.StopCoroutine(buildProcess);
-        buildProcess=null;
+        buildProcess = null;
     }
-    // корутина, которая управляет процессом построения текста в зависимости от выбранного метода
+
+    // Корутина для построения текста в зависимости от выбранного метода
     IEnumerator Building()
     {
-        Prepear();
+        Prepear(); // Подготовить текст перед отображением
 
-        switch(buildMethod)
+        // Выбираем метод отображения текста
+        switch (buildMethod)
         {
             case BuildMethod.typewriter:
                 yield return Build_Typewriter();
@@ -106,36 +129,38 @@ public class TextArchitect
                 yield return Build_Fade();
                 break;
         }
-        OnComplete();
+
+        OnComplete(); // Завершаем процесс отображения
     }
 
-    //Завершение
+    // Этот метод выполняется, когда процесс завершен
     private void OnComplete()
     {
-        buildProcess=null;
-        hurryUp = false;
+        buildProcess = null;
+        hurryUp = false; // Отключаем флаг для ускорения
     }
 
-    //Этот метод принудительно завершает процесс отображения текста
+    // Этот метод принудительно завершает процесс отображения текста
     public void ForseComplit()
     {
         switch (buildMethod)
         {
             case BuildMethod.typewriter:
-            tmpro.maxVisibleCharacters=tmpro.textInfo.characterCount;
+                tmpro.maxVisibleCharacters = tmpro.textInfo.characterCount;
                 break;
             case BuildMethod.fade:
                 tmpro.ForceMeshUpdate();
                 break;
         }
 
-        Stop();
-        OnComplete();
+        Stop(); // Останавливаем текущий процесс
+        OnComplete(); // Завершаем процесс
     }
 
+    // Метод для подготовки текста перед его отображением в зависимости от метода
     private void Prepear()
     {
-        switch(buildMethod)
+        switch (buildMethod)
         {
             case BuildMethod.instant:
                 Prepare_Instant();
@@ -149,56 +174,48 @@ public class TextArchitect
         }
     }
 
-    //Мгновенно показывает весь текст.
+    // Мгновенное отображение текста
     private void Prepare_Instant()
     {
-        tmpro.color = tmpro.color;
-        tmpro.text = fullTargetText;
-        tmpro.ForceMeshUpdate();
-        tmpro.maxVisibleCharacters = tmpro.textInfo.characterCount;
+        tmpro.color = tmpro.color; // Обновить цвет
+        tmpro.text = fullTargetText; // Установить полный текст
+        tmpro.ForceMeshUpdate(); // Применить изменения
+        tmpro.maxVisibleCharacters = tmpro.textInfo.characterCount; // Показать все символы
     }
 
-    //Подготавливает текст для эффекта печатной машинки 
+    // Подготовка для эффекта печатной машинки
     private void Prepare_Typewriter()
     {
-        tmpro.color = tmpro.color;
-        tmpro.maxVisibleCharacters=0;
+        tmpro.color = tmpro.color; // Обновить цвет
+        tmpro.maxVisibleCharacters = 0; // Начинаем с нулевого символа
         tmpro.text = preText;
 
-        if (preText!="")
+        // Если preText не пустой, то применяем ForceMeshUpdate
+        if (preText != "")
         {
             tmpro.ForceMeshUpdate();
             tmpro.maxVisibleCharacters = tmpro.textInfo.characterCount;
         }
 
-        tmpro.text+=targetText;
-        tmpro.ForceMeshUpdate();
+        tmpro.text += targetText; // Добавляем новый текст
+        tmpro.ForceMeshUpdate(); // Применить изменения
     }
 
-    //Метод для подготовки эффекта затухания
+    // Подготовка для эффекта затухания
     private void Prepare_Fade()
     {
-        tmpro.text = preText;
-        if (preText !="")
-        {
-            tmpro.ForceMeshUpdate();
-            preTextLength = tmpro.textInfo.characterCount;
-        }
-        else
-        {
-            preTextLength=0;
-        }
-        
+        tmpro.text = preText; // Устанавливаем предшествующий текст
+        preTextLength = preText != "" ? tmpro.textInfo.characterCount : 0;
 
-        tmpro.text = targetText;
-        tmpro.maxVisibleCharacters = int.MaxValue;
-        tmpro.ForceMeshUpdate();
+        tmpro.text = targetText; // Устанавливаем новый текст
+        tmpro.maxVisibleCharacters = int.MaxValue; // Все символы изначально невидимы
+        tmpro.ForceMeshUpdate(); // Применить изменения
 
         TMP_TextInfo textInfo = tmpro.textInfo;
+        Color colorVisible = new Color(textColor.r, textColor.g, textColor.b, 1);
+        Color colorHidden = new Color(textColor.r, textColor.g, textColor.b, 0);
 
-        Color colorVisable = new Color(textColor.r,textColor.g,textColor.b,1);
-        Color colorHidden = new Color(textColor.r,textColor.g,textColor.b,0);
-
+        // Инициализация массива цветов для символов
         Color32[] vertexColor = textInfo.meshInfo[textInfo.characterInfo[0].materialReferenceIndex].colors32;
 
         for (int i = 0; i < textInfo.characterCount; i++)
@@ -210,90 +227,77 @@ public class TextArchitect
                 continue;
             }
 
-            if (i<preTextLength)
+            if (i < preTextLength)
             {
+                // Для символов из preText делаем их видимыми
                 for (int v = 0; v < 4; v++)
                 {
-                    vertexColor[charInfo.vertexIndex+v]=colorVisable;
+                    vertexColor[charInfo.vertexIndex + v] = colorVisible;
                 }
             }
             else
             {
+                // Для остальных символов устанавливаем невидимость
                 for (int v = 0; v < 4; v++)
                 {
-                    vertexColor[charInfo.vertexIndex+v]=colorHidden;
+                    vertexColor[charInfo.vertexIndex + v] = colorHidden;
                 }
             }
         }
 
-        tmpro.UpdateVertexData(TMP_VertexDataUpdateFlags.Colors32);
+        tmpro.UpdateVertexData(TMP_VertexDataUpdateFlags.Colors32); // Обновляем данные вершин
     }
 
-    //Управляет процессом отображения текста по одному символу за раз
+    // Корутина для эффекта печатной машинки
     private IEnumerator Build_Typewriter()
     {
-        while (tmpro.maxVisibleCharacters<tmpro.textInfo.characterCount)
+        while (tmpro.maxVisibleCharacters < tmpro.textInfo.characterCount)
         {
-            tmpro.maxVisibleCharacters+= hurryUp ? charactersPerCycle * 4 : charactersPerCycle;
-            yield return new WaitForSeconds(0.015f / speed);
+            // Печать символов по одному
+            tmpro.maxVisibleCharacters += hurryUp ? charactersPerCycle * 4 : charactersPerCycle;
+            yield return new WaitForSeconds(0.015f / speed); // Задержка между символами
         }
     }
-    //Заготовка для эффекта затухания
+
+    // Корутина для эффекта затухания текста
     private IEnumerator Build_Fade()
     {
-        int minRange = preTextLength;
-        int maxRange = minRange+1;
-
-        byte alphaThreshold = 15;
-
+        // Получаем информацию о тексте
         TMP_TextInfo textInfo = tmpro.textInfo;
+        Color32[] vertexColor = textInfo.meshInfo[0].colors32;
 
-        Color32[] vertexColor = textInfo.meshInfo[textInfo.characterInfo[0].materialReferenceIndex].colors32;
-        float[] alphas = new float[textInfo.characterCount];
+        float fadeSpeed = 2f;
 
         while (true)
         {
-            float fadeSpeed = ((hurryUp ? charactersPerCycle * 4 : charactersPerCycle)*speed)*4f;
-
-            for (int i = minRange; i < maxRange; i++)
+            // Плавно увеличиваем прозрачность каждого символа
+            bool finished = true;
+            for (int i = preTextLength; i < textInfo.characterCount; i++)
             {
                 TMP_CharacterInfo charInfo = textInfo.characterInfo[i];
+                if (!charInfo.isVisible) continue;
 
-                if (!charInfo.isVisible)
+                Color32 color = vertexColor[charInfo.vertexIndex];
+
+                if (color.a < 255)
                 {
-                    continue;
-                }
-
-                int vertexIndex = textInfo.characterInfo[i].vertexIndex;
-                alphas[i] = Mathf.MoveTowards(alphas[i],255,fadeSpeed);
-
-                for (int v = 0; v < 4; v++)
-                {
-                    vertexColor[charInfo.vertexIndex+v].a=(byte)alphas[i];
-                }
-
-                if (alphas[i]>=255)
-                {
-                    minRange++;
+                    finished = false;
+                    color.a = (byte)Mathf.Clamp(color.a + fadeSpeed, 0, 255); // Увеличиваем альфа-канал
+                    for (int j = 0; j < 4; j++)
+                    {
+                        vertexColor[charInfo.vertexIndex + j] = color;
+                    }
                 }
             }
 
-            tmpro.UpdateVertexData(TMP_VertexDataUpdateFlags.Colors32);
+            tmpro.UpdateVertexData(TMP_VertexDataUpdateFlags.Colors32); // Обновляем данные
 
-            bool lastCharacterIsInvisible = !textInfo.characterInfo[maxRange-1].isVisible;
-            if (alphas[maxRange-1]>alphaThreshold||lastCharacterIsInvisible)
+            if (finished)
             {
-                if(maxRange<textInfo.characterCount)
-                    maxRange++;
-                
-                else if (alphas[maxRange-1]>=255||lastCharacterIsInvisible)
-                    break;
-                
+                break;
             }
 
-            yield return new WaitForEndOfFrame();
+            yield return new WaitForEndOfFrame(); // Ждем следующего кадра
         }
-        
-        
     }
 }
