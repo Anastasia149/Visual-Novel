@@ -8,4 +8,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/SampleScene.unity
     guid: 99c9720ab356a0642a771bea13969a05
+  - enabled: 1
+    path: Assets/_MAIN/Scenes/Visual Novel.unity
+    guid: bf6da9fc5f9cdb24b8c44040136fad18
   m_configObjects: {}
