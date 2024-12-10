@@ -18,6 +18,25 @@ namespace CHARACTER
             instance = this; // Устанавливаем текущий экземпляр как синглтон
         }
 
+        public CharacterConfigData GetCharacterConfig(string characterName)
+        {
+            return config.GetConfig(characterName);
+        }
+
+        public Character GetCharacter(string characterName, bool creatIfDoesNotExist = false)
+        {
+            if (characters.ContainsKey(characterName.ToLower()))
+            {
+                return characters[characterName.ToLower()];
+            }
+            else if (creatIfDoesNotExist)
+            {
+                return CreateCharacter(characterName);
+            }
+
+            return null;
+        }
+
         // Метод для создания нового персонажа
         public Character CreateCharacter(string characterName)
         {
@@ -59,17 +78,17 @@ namespace CHARACTER
             switch (info.config.characterType)
             {
                 case Character.CharacterType.Text:
-                    return new Character_Text(info.name); // Создаем текстового персонажа
+                    return new Character_Text(info.name, info.config); // Создаем текстового персонажа
 
                 case Character.CharacterType.Sprite:
                 case Character.CharacterType.SpriteSheet:
-                    return new Character_Sprite(info.name); // Создаем персонажа-спрайт
+                    return new Character_Sprite(info.name,info.config); // Создаем персонажа-спрайт
 
                 case Character.CharacterType.Live2D:
-                    return new Character_Live2D(info.name); // Создаем персонажа Live2D
+                    return new Character_Live2D(info.name,info.config); // Создаем персонажа Live2D
 
                 case Character.CharacterType.Model3D:
-                    return new Character_Model3D(info.name); // Создаем 3D-модель персонажа
+                    return new Character_Model3D(info.name,info.config); // Создаем 3D-модель персонажа
 
                 default:
                     return null; // Возвращаем null для неподдерживаемого типа

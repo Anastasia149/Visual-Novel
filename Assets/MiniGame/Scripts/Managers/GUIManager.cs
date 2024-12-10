@@ -60,8 +60,8 @@ public class GUIManager : MonoBehaviour {
             timeRemaining = 90;  // 1.5 минуты на среднем уровне
             difficultyTxt.text = "Difficulty: Medium";
         } else if (difficulty == Difficulty.Hard) {
-            targetScore = 10000;
-            timeRemaining = 60;  // 1 минута на сложном уровне
+            targetScore = 100;
+            timeRemaining = 10;  // 1 минута на сложном уровне
             difficultyTxt.text = "Difficulty: Hard";
         }
     }

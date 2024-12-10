@@ -39,13 +39,15 @@ public class ConversationManager
     }
 
     // Метод для запуска нового диалога.
-    public void StartConversation(List<string> conversation)
+    public Coroutine StartConversation(List<string> conversation)
     {
         // Прерываем текущий диалог, если он идёт.
         StopConversation();
 
         // Запускаем новую корутину для обработки переданного списка строк диалога.
         process = dialogueSystem.StartCoroutine(RunningConversation(conversation));
+
+        return process;
     }
 
     // Метод для остановки текущего диалога.

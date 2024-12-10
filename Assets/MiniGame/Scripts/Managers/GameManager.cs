@@ -29,6 +29,8 @@ public class GameManager : MonoBehaviour
     // Операция асинхронной загрузки сцены
     private AsyncOperation async;
 
+    private bool isReturning = false;
+
     void Awake() {
         // Проверяем, существует ли уже экземпляр GameManager
         if (instance == null) {
@@ -138,7 +140,7 @@ public class GameManager : MonoBehaviour
     }
 
     // Флаг для предотвращения повторного возврата
-    private bool isReturning = false;
+    
 
     // Возвращает игрока в сцену визуальной новеллы
     public void ReturnToVisualNovel() {

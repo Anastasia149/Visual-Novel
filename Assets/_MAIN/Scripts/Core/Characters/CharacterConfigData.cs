@@ -16,8 +16,8 @@ public class CharacterConfigData
     public Color nameColor; // Цвет текста имени персонажа
     public Color dialogueColor; // Цвет текста диалога персонажа
 
-    public TMP_Asset nameFont; // Шрифт, используемый для имени персонажа
-    public TMP_Asset dialogueFont; // Шрифт, используемый для диалога персонажа
+    public TMP_FontAsset nameFont; // Шрифт, используемый для имени персонажа
+    public TMP_FontAsset dialogueFont; // Шрифт, используемый для диалога персонажа
 
     // Метод для создания копии объекта CharacterConfigData
     public CharacterConfigData Copy()

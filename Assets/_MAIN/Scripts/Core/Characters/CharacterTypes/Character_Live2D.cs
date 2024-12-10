@@ -7,7 +7,7 @@ using CHARACTER;
 public class Character_Live2D : Character
 {
     // Конструктор для создания Live2D-персонажа
-    public Character_Live2D(string name) : base(name)
+    public Character_Live2D(string name, CharacterConfigData config) : base(name, config)
     {
         // Выводим сообщение в консоль, что Live2D-персонаж создан
         Debug.Log($"Created Live2D Character: '{name}'");
