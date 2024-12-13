@@ -7,7 +7,7 @@ using CHARACTER;
 public class Character_Model3D : Character
 {
     // Конструктор для создания 3D-персонажа
-    public Character_Model3D(string name, CharacterConfigData config) : base(name, config)
+    public Character_Model3D(string name, CharacterConfigData config, GameObject prefab, string rootAssetsFolder) : base(name, config, prefab)
     {
         // Выводим сообщение в консоль, что 3D-персонаж создан
         Debug.Log($"Created 3D Model Character: '{name}'");

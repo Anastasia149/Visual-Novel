@@ -15,7 +15,7 @@ public class PlayerInputManager : MonoBehaviour
     void Update()
     {
         // Этот метод вызывается каждый кадр.
-        // Проверяем, была ли нажата клавиша Return (Enter).
+        // Проверяем, была ли нажата клавиша Mouse0.
         if (Input.GetKeyDown(KeyCode.Mouse0))
         {
             // Если клавиша была нажата, вызываем метод для продолжения диалога.

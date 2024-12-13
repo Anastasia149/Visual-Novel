@@ -13,6 +13,15 @@ namespace CHARACTER
         // Получение конфигурации персонажей из диалоговой системы
         private CharacterConfigSO config => DialogueSystem.instance.config.characterConfigurationAsset;
 
+        private const string CHARACTER_CASTING_ID = " as ";
+        private const string CHARACTER_NAME_ID= "<charname>";
+        public string characterRootPathFormat =>$"Characters/{CHARACTER_NAME_ID}";
+        public string characterPrefabNameFormat =>$"Character -[{CHARACTER_NAME_ID}]";
+        public string characterPrefabPathFormat => $"{characterRootPathFormat}/{characterPrefabNameFormat}";
+
+        [SerializeField]private RectTransform _characterpanel = null;
+        public RectTransform characterpanel => _characterpanel;
+
         private void Awake()
         {
             instance = this; // Устанавливаем текущий экземпляр как синглтон
@@ -64,12 +73,26 @@ namespace CHARACTER
         {
             CHARACTER_INFO result = new CHARACTER_INFO(); // Создаем экземпляр информации о персонаже
 
-            result.name = characterName; // Устанавливаем имя персонажа
+            string[] nameData = characterName.Split(CHARACTER_CASTING_ID, System.StringSplitOptions.RemoveEmptyEntries);
+            result.name = nameData[0]; // Устанавливаем имя персонажа
+            result.castingName = nameData.Length>1?nameData[1]:result.name;
 
-            result.config = config.GetConfig(characterName); // Получаем конфигурацию персонажа из файла конфигурации
+            result.config = config.GetConfig(result.castingName); // Получаем конфигурацию персонажа из файла конфигурации
+
+            result.prefab = GetPrefabForCharacter(result.castingName);
+
+            result.rootCharacterFolder = FormatCharacterPath(characterPrefabPathFormat, result.castingName);
 
             return result; // Возвращаем заполненную информацию
         }
+
+        private GameObject GetPrefabForCharacter(string characterName)
+        {
+            string prefabPath = FormatCharacterPath(characterPrefabPathFormat, characterName);
+            return Resources.Load<GameObject>(prefabPath);
+        }
+
+        public string FormatCharacterPath(string path, string characterName)=>path.Replace(CHARACTER_NAME_ID, characterName);
 
         // Метод для создания персонажа на основе информации
         private Character CreateCharacterFronInfo(CHARACTER_INFO info)
@@ -82,13 +105,13 @@ namespace CHARACTER
 
                 case Character.CharacterType.Sprite:
                 case Character.CharacterType.SpriteSheet:
-                    return new Character_Sprite(info.name,info.config); // Создаем персонажа-спрайт
+                    return new Character_Sprite(info.name,info.config, info.prefab, info.rootCharacterFolder); // Создаем персонажа-спрайт
 
                 case Character.CharacterType.Live2D:
-                    return new Character_Live2D(info.name,info.config); // Создаем персонажа Live2D
+                    return new Character_Live2D(info.name,info.config, info.prefab, info.rootCharacterFolder); // Создаем персонажа Live2D
 
                 case Character.CharacterType.Model3D:
-                    return new Character_Model3D(info.name,info.config); // Создаем 3D-модель персонажа
+                    return new Character_Model3D(info.name,info.config, info.prefab, info.rootCharacterFolder); // Создаем 3D-модель персонажа
 
                 default:
                     return null; // Возвращаем null для неподдерживаемого типа
@@ -99,7 +122,12 @@ namespace CHARACTER
         private class CHARACTER_INFO
         {
             public string name = ""; // Имя персонажа
+            public string castingName="";
+
+            public string rootCharacterFolder = ""; 
+
             public CharacterConfigData config = null; // Конфигурация персонажа
+            public GameObject prefab = null;
         }
     }
 }

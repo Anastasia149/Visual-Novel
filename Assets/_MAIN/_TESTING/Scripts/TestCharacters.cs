@@ -5,14 +5,17 @@ using TESTING;
 using CHARACTER;
 using DIALOGUE;
 using TMPro;
+using UnityEngine.Timeline;
+using System;
 
 public class TestCharacters : MonoBehaviour
 {
+    private Character CreateCharacter(string name)=>CharacterManager.instance.CreateCharacter(name);
+
     void Start()
     {
-        
-        // Character Sparks = CharacterManager.instance.CreateCharacter("Миссис Спаркс");
-        // Character Sparks2 = CharacterManager.instance.CreateCharacter("Миссис Спаркс");
+        //Character Sara = CharacterManager.instance.CreateCharacter("Сара");
+        //Character Stuard_child = CharacterManager.instance.CreateCharacter("Stuard child");
         // Character Breadberry = CharacterManager.instance.CreateCharacter("Сара Брэдбери");
 
         StartCoroutine(Test());
@@ -20,39 +23,25 @@ public class TestCharacters : MonoBehaviour
 
     IEnumerator Test()
     {
-        Character Stuard = CharacterManager.instance.CreateCharacter("Элизабет Стюард");
-        Character Sparks = CharacterManager.instance.CreateCharacter("Миссис Спаркс");
-        Character Breadberry = CharacterManager.instance.CreateCharacter("Сара Брэдбери");
+        Character StuardChild = CreateCharacter("Стюард ребенок");
+        Character_Sprite Sara = CreateCharacter("Сара") as Character_Sprite;
+
+        StuardChild.Show();
+        Sara.Show();
+
+        Sprite SaraSprite = Sara.GetSprite("Сара, грустная");
+        Debug.Log(SaraSprite == null ? "Sprite not found" : "Sprite found: " + SaraSprite.name);
+
+        Sara.SetSprite(SaraSprite, 0);
+        Debug.Log("Sprite applied to Sara");
         
-        List<string> lines = new List<string>()
-        {
-            "Stuard \"Hi!\"",
-            "This is a line",
-            "And anothe",
-            "And last one"
-        };
-        yield return Stuard.Say(lines);
+        Sara.Show();
 
-        Stuard.SetNameColor(Color.red);
-        Stuard.SetDialogueColor(Color.green);
+        yield return StuardChild.Say("Элизабет Стюард\"привет\"");
 
-        yield return Stuard.Say(lines);
+        yield return Sara.Say("Сара\"пока\"");
 
-        Stuard.ResetConfigurationData();
-
-        yield return Stuard.Say(lines);
-
-        lines = new List<string>()
-        {
-            "Sparks \"Hi!\"",
-            "This is a line",
-            "And anothe",
-            "And last one"
-        };
-        yield return Sparks.Say(lines);
-        yield return Breadberry.Say("And last one");
-
-        Debug.Log("Finished");
+        yield return null;
     }
 
     // Update is called once per frame
